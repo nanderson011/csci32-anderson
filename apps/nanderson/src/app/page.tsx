@@ -12,8 +12,10 @@ export default function Home() {
         </h5>
         <p className="text-body">I'm tired grandpa.</p>
       </a>
-
-      <Button href="/page2">Go to Page 2</Button>
+      <div className="flex gap-4">
+        <Button href="/page2">Go to Page 2</Button>
+        <Button href="/input">Go to my Input Demo</Button>
+      </div>
     </main>
   )
 }
