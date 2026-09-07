@@ -1,118 +1,50 @@
 'use client'
 
 import { useState } from 'react'
-import { Button } from '@repo/ui/button'
-import { Input } from '@repo/ui/input'
-import { getRandomNumber } from '../../../lib/math'
+import RandomNumberGame from './random-number-game'
+import RandomNumberGameMenu from './random-number-game-menu'
+import { getRandomInt } from '@repo/math/getRandomInt'
 
-export default function RandomNumberGuesserPage() {
-  const [min, setMin] = useState('1')
-  const [max, setMax] = useState('100')
-  const [maxGuesses, setMaxGuesses] = useState('10')
-  const [targetNumber, setTargetNumber] = useState<number | null>(null)
-  const [guess, setGuess] = useState('')
-  const [guessesUsed, setGuessesUsed] = useState(0)
-  const [message, setMessage] = useState('')
-  const [gameOver, setGameOver] = useState(false)
-  const [lowBound, setLowBound] = useState(1)
-  const [highBound, setHighBound] = useState(100)
-  const recommendedGuess = Math.floor((lowBound + highBound) / 2)
+export interface StartGameProps {
+  min: number
+  max: number
+  maxGuessCount: number
+}
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
+export interface GuessingGameMenuProps {
+  startGame: (props: StartGameProps) => void
+}
 
-    if (targetNumber === null || gameOver) {
-      return
-    }
+export interface GuessingGameEngineProps {
+  randomNumber: number
+  maxGuessCount: number
+  endGame: () => void
+}
 
-    const numericGuess = Number(guess)
-    const newGuessesUsed = guessesUsed + 1
+export default function RandomNumberGuesser() {
+  const [isGameInProgress, setIsGameInProgress] = useState(false)
+  const [randomNumber, setRandomNumber] = useState(0)
+  const [maxGuessCount, setMaxGuessCount] = useState(0)
 
-    setGuessesUsed(newGuessesUsed)
+  function startGame({ min, max, maxGuessCount }: StartGameProps) {
+    const newRandomNumber = getRandomInt({ min, max })
 
-    if (numericGuess === targetNumber) {
-      setMessage(`Correct! The number was ${targetNumber}. Play again?`)
-      setGameOver(true)
-    } else if (newGuessesUsed >= Number(maxGuesses)) {
-      setMessage(`You lost. The number was ${targetNumber}. Play again?`)
-      setGameOver(true)
-    } else if (numericGuess < targetNumber) {
-      setMessage('Higher!')
-      setLowBound(numericGuess + 1)
-    } else {
-      setMessage('Lower!')
-      setHighBound(numericGuess - 1)
-    }
+    setRandomNumber(newRandomNumber)
+    setMaxGuessCount(maxGuessCount)
+    setIsGameInProgress(true)
   }
+
+  function endGame() {
+    setIsGameInProgress(false)
+  }
+
   return (
-    <main className="p-8 space-y-6">
-      <h1 className="text-3xl font-bold">Random Number Guesser</h1>
-
-      <div className="flex flex-wrap gap-4">
-        <Input id="min" name="min" type="number" placeholder="Minimum" value={min} setValue={setMin} />
-
-        <Input id="max" name="max" type="number" placeholder="Maximum" value={max} setValue={setMax} />
-
-        <Input
-          id="max-guesses"
-          name="maxGuesses"
-          type="number"
-          placeholder="Max guesses"
-          value={maxGuesses}
-          setValue={setMaxGuesses}
-        />
-      </div>
-
-      <Button
-        onClick={() => {
-          const newTarget = getRandomNumber(Number(min), Number(max))
-
-          setTargetNumber(newTarget)
-          setGuess('')
-          setGuessesUsed(0)
-          setMessage('Game started! Enter your first guess.')
-          setGameOver(false)
-          setLowBound(Number(min))
-          setHighBound(Number(max))
-        }}
-      >
-        New Game
-      </Button>
-      {targetNumber !== null && !gameOver && (
-        <form onSubmit={handleSubmit} className="flex gap-3">
-          <Input
-            id="guess"
-            name="guess"
-            type="number"
-            placeholder="Enter your guess"
-            value={guess}
-            setValue={setGuess}
-          />
-
-          <Button type="submit">Guess</Button>
-        </form>
+    <div className="p-24 max-w-[800px] m-auto">
+      {isGameInProgress ? (
+        <RandomNumberGame endGame={endGame} randomNumber={randomNumber} maxGuessCount={maxGuessCount} />
+      ) : (
+        <RandomNumberGameMenu startGame={startGame} />
       )}
-
-      {message && <p>{message}</p>}
-      {targetNumber !== null && !gameOver && <p>Recommended guess: {recommendedGuess}</p>}
-
-      {gameOver && (
-        <Button
-          onClick={() => {
-            const newTarget = getRandomNumber(Number(min), Number(max))
-
-            setTargetNumber(newTarget)
-            setGuess('')
-            setGuessesUsed(0)
-            setMessage('New game started! Enter your first guess.')
-            setGameOver(false)
-            setLowBound(Number(min))
-            setHighBound(Number(max))
-          }}
-        >
-          Play Again
-        </Button>
-      )}
-    </main>
+    </div>
   )
 }
