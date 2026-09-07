@@ -15,7 +15,6 @@ export default function Home() {
       <div className="flex gap-4">
         <Button href="/page2">Go to Page 2</Button>
         <Button href="/input">Go to my Input Demo</Button>
-        <Button href="/games/random-number-guesser">Random Number Guesser</Button>
       </div>
     </main>
   )
