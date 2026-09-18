@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
-    "module": "nodenext",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+
+    "module": "esnext",
     "target": "esnext",
+    "moduleResolution": "bundler",
     "types": ["node"],
 
     "sourceMap": true,
@@ -13,10 +17,14 @@
 
     "strict": true,
     "jsx": "react-jsx",
-    "verbatimModuleSyntax": false,
+    "verbatimModuleSyntax": true,
     "isolatedModules": true,
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   }
 }
