@@ -33,3 +33,9 @@ export function signToken(claims: Record<string, any>): string {
     header: { typ: 'JWT' },
   } as jwt.SignOptions)
 }
+export async function comparePassword(
+  plain: string,
+  hash: string,
+): Promise<boolean> {
+  return bcrypt.compare(plain, hash)
+}

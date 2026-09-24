@@ -1,5 +1,5 @@
 import type { SignUpInput } from '@/resolvers/types/AuthTypes'
-import { hashPassword, signToken } from '@/utils/auth'
+import { comparePassword, hashPassword, signToken } from '@/utils/auth'
 import type { PrismaClient } from 'csci32-database'
 
 export interface UserServiceProps {
@@ -54,4 +54,46 @@ export class UserService {
       token,
     }
   }
+  async authenticateUser(params: {
+  email: string
+  password: string
+}) {
+  const { email, password } = params
+
+  const found = await this.prisma.user.findUnique({
+    where: { email },
+    select: {
+      user_id: true,
+      email: true,
+      name: true,
+      passwordHash: true,
+    },
+  })
+
+  if (!found || !found.passwordHash) {
+    throw new Error('Invalid email or password')
+  }
+
+  const ok = await comparePassword(
+    password,
+    found.passwordHash,
+  )
+
+  if (!ok) {
+    throw new Error('Invalid email or password')
+  }
+
+  const token = signToken({
+    sub: found.user_id,
+    email: found.email,
+    name: found.name ?? undefined,
+  })
+
+  const { passwordHash, ...user } = found
+
+  return {
+    user,
+    token,
+  }
+}
 }
