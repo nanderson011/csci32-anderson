@@ -1,52 +1,28 @@
 'use client'
 
-import type { HTMLInputTypeAttribute } from 'react'
+import { forwardRef } from 'react'
+import type { ChangeEventHandler, InputHTMLAttributes } from 'react'
+
 import { Size, getInputSizeStyles } from './size'
 import { getCommonStyles } from './tokens'
-import {
-  Variant,
-  getVariantBorderStyles,
-  getVariantInputTextStyles,
-  getVariantOutlineStyles,
-} from './variant'
+import { Variant, getVariantBorderStyles, getVariantInputTextStyles, getVariantOutlineStyles } from './variant'
 
-interface InputProps {
-  placeholder?: string
-  className?: string
+interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'size'> {
   size?: Size
   variant?: Variant
-  type?: HTMLInputTypeAttribute
-  defaultValue?: any
-  value?: any
   setValue?: (newValue: string) => void
-  name: string
-  id: string
 }
 
-export function Input({
-  placeholder,
-  className,
-  size = Size.MEDIUM,
-  variant = Variant.PRIMARY,
-  type = 'text',
-  defaultValue,
-  value,
-  setValue,
-  name,
-  id,
-}: InputProps) {
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  { className, size = Size.MEDIUM, variant = Variant.PRIMARY, setValue, onChange, ...props },
+  ref,
+) {
   const classes = `${getInputSizeStyles(size)} ${getVariantInputTextStyles(variant)} ${getVariantBorderStyles(variant)} ${getVariantOutlineStyles(variant)} ${getCommonStyles()} border ${className ?? ''}`
 
-  return (
-    <input
-      placeholder={placeholder}
-      className={classes}
-      type={type}
-      defaultValue={defaultValue}
-      value={value}
-      onChange={(event) => setValue?.(event.target.value)}
-      name={name}
-      id={id}
-    />
-  )
-}
+  const handleChange: ChangeEventHandler<HTMLInputElement> = (event) => {
+    setValue?.(event.target.value)
+    onChange?.(event)
+  }
+
+  return <input ref={ref} className={classes} onChange={handleChange} {...props} />
+})
