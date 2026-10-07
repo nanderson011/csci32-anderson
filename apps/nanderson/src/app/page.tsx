@@ -1,23 +1,24 @@
-import { Button } from '@repo/ui/button'
+'use client'
+
+import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 export default function Home() {
-  return (
-    <main className="p-8 space-y-6">
-      <a
-        href="#"
-        className="bg-neutral-primary-soft block max-w-sm p-6 border border-default rounded-base shadow-xs hover:bg-neutral-secondary-medium"
-      >
-        <h5 className="mb-3 text-2xl font-semibold tracking-tight text-heading leading-8">
-          This will eventually be my website
-        </h5>
-        <p className="text-body">I'm tired grandpa.</p>
-      </a>
-      <div className="flex gap-4">
-        <Button href="/page2">Go to Page 2</Button>
-        <Button href="/input">Go to my Input Demo</Button>
-        <Button href="/games/random-number-guesser">Random Number Guesser</Button>
-        <Button href="/welcome">Welcome / Auth</Button>
-      </div>
-    </main>
-  )
+  const { user, isHydrated } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isHydrated) {
+      return
+    }
+
+    if (user) {
+      router.push('/dashboard')
+    } else {
+      router.push('/welcome')
+    }
+  }, [user, isHydrated, router])
+
+  return <div>Loading...</div>
 }

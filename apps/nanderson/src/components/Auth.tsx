@@ -55,7 +55,7 @@ export default function Auth() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
         {isSignUpMode && (
           <Input
             type="text"
@@ -73,6 +73,10 @@ export default function Auth() {
           variant={Variant.PRIMARY}
           {...register('email', {
             required: 'Email is required',
+            pattern: {
+              value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              message: 'Please enter a valid email address',
+            },
           })}
         />
 
