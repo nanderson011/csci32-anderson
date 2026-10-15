@@ -1,10 +1,12 @@
 import { UserResolver } from '@/resolvers/UserResolver'
-import { buildSchema } from 'type-graphql'
+import { buildSchema, registerEnumType } from 'type-graphql'
+import { customAuthChecker } from '@/utils/authChecker'
 
 import type { NonEmptyArray } from 'type-graphql'
 import type { FastifyBaseLogger, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
 
-import type { PrismaClient } from 'csci32-database'
+import { PermissionName, RoleName, type PrismaClient } from 'csci32-database'
+
 import { getBooleanEnvVar, getRequiredStringEnvVar } from '@/utils'
 import type { UserService } from '@/services/UserService'
 
@@ -13,6 +15,16 @@ import mercuriusLogging from 'mercurius-logging'
 
 const GRAPHQL_API_PATH = '/api/graphql'
 const GRAPHQL_DEPTH_LIMIT = 7
+
+registerEnumType(PermissionName, {
+  name: 'PermissionName',
+  description: 'Enum representing valid permissions for authorization',
+})
+
+registerEnumType(RoleName, {
+  name: 'RoleName',
+  description: 'Enum representing valid roles for users',
+})
 
 const resolvers = [UserResolver] as NonEmptyArray<Function>
 
@@ -27,6 +39,7 @@ export interface Context {
 export async function registerGraphQL(fastify: FastifyInstance) {
   const schema = await buildSchema({
     resolvers,
+    authChecker: customAuthChecker,
   })
 
   const graphiql = getBooleanEnvVar('ENABLE_GRAPHIQL', false)

@@ -1,6 +1,6 @@
 import type { SignUpInput } from '@/resolvers/types/AuthTypes'
 import { comparePassword, hashPassword, signToken } from '@/utils/auth'
-import type { PrismaClient } from 'csci32-database'
+import { BASIC_ROLE_ID, PermissionName, type PrismaClient } from 'csci32-database'
 
 export interface UserServiceProps {
   prisma: PrismaClient
@@ -35,11 +35,30 @@ export class UserService {
         email,
         name: name ?? null,
         passwordHash,
+        role: {
+          connect: {
+            role_id: BASIC_ROLE_ID,
+          },
+        },
       },
       select: {
         user_id: true,
         email: true,
         name: true,
+        role: {
+          select: {
+            name: true,
+            role_permissions: {
+              select: {
+                permission: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     })
 
@@ -47,6 +66,8 @@ export class UserService {
       sub: created.user_id,
       email: created.email,
       name: created.name ?? undefined,
+      role: created.role?.name,
+      permissions: created.role?.role_permissions.map((rolePermission) => rolePermission.permission.name) ?? [],
     })
 
     return {
@@ -54,46 +75,57 @@ export class UserService {
       token,
     }
   }
-  async authenticateUser(params: {
-  email: string
-  password: string
-}) {
-  const { email, password } = params
 
-  const found = await this.prisma.user.findUnique({
-    where: { email },
-    select: {
-      user_id: true,
-      email: true,
-      name: true,
-      passwordHash: true,
-    },
-  })
+  async authenticateUser(params: { email: string; password: string }) {
+    const { email, password } = params
 
-  if (!found || !found.passwordHash) {
-    throw new Error('Invalid email or password')
+    const found = await this.prisma.user.findUnique({
+      where: { email },
+      select: {
+        user_id: true,
+        email: true,
+        name: true,
+        passwordHash: true,
+        role: {
+          select: {
+            name: true,
+            role_permissions: {
+              select: {
+                permission: {
+                  select: {
+                    name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    })
+
+    if (!found || !found.passwordHash) {
+      throw new Error('Invalid email or password')
+    }
+
+    const ok = await comparePassword(password, found.passwordHash)
+
+    if (!ok) {
+      throw new Error('Invalid email or password')
+    }
+
+    const token = signToken({
+      sub: found.user_id,
+      email: found.email,
+      name: found.name ?? undefined,
+      role: found.role?.name,
+      permissions: found.role?.role_permissions.map((rolePermission) => rolePermission.permission.name) ?? [],
+    })
+
+    const { passwordHash, ...user } = found
+
+    return {
+      user,
+      token,
+    }
   }
-
-  const ok = await comparePassword(
-    password,
-    found.passwordHash,
-  )
-
-  if (!ok) {
-    throw new Error('Invalid email or password')
-  }
-
-  const token = signToken({
-    sub: found.user_id,
-    email: found.email,
-    name: found.name ?? undefined,
-  })
-
-  const { passwordHash, ...user } = found
-
-  return {
-    user,
-    token,
-  }
-}
 }
