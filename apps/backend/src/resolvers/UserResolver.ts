@@ -1,11 +1,24 @@
 import 'reflect-metadata'
 
-import { Resolver, Query, Field, ObjectType, Ctx, ID, Arg, Mutation, Authorized } from 'type-graphql'
+import {
+  Resolver,
+  Query,
+  Field,
+  ObjectType,
+  Ctx,
+  ID,
+  Arg,
+  Mutation,
+  Authorized,
+  FieldResolver,
+  Root,
+} from 'type-graphql'
 
 import type { Context } from '@/utils/graphql'
 import { AuthPayload, SignUpInput } from '@/resolvers/types/AuthTypes'
 import { SignInInput } from '@/resolvers/types/SignInTypes'
 import { FindManyUsersInput } from '@/resolvers/types/FindManyUsersInput'
+import { Role } from '@/resolvers/types/Role'
 
 import { PermissionName } from 'csci32-database'
 
@@ -19,9 +32,13 @@ class User {
 
   @Field(() => String, { nullable: true })
   email?: string | null
+
+  // Internal field used by the role field resolver.
+  // This is not exposed directly in GraphQL.
+  role_id?: string | null
 }
 
-@Resolver()
+@Resolver(() => User)
 export class UserResolver {
   @Authorized([PermissionName.UserRead])
   @Query(() => [User])
@@ -79,5 +96,18 @@ export class UserResolver {
       user,
       token,
     }
+  }
+
+  @FieldResolver(() => Role, { nullable: true })
+  async role(@Root() user: User, @Ctx() ctx: Context) {
+    if (!user.role_id) {
+      return null
+    }
+
+    return ctx.prisma.role.findUnique({
+      where: {
+        role_id: user.role_id,
+      },
+    })
   }
 }
