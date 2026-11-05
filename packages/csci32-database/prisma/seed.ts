@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client'
 import { seedPermissions } from './seeders/seedPermissions'
 import { seedRoles } from './seeders/seedRoles'
 import { seedUsers } from './seeders/seedUsers'
+import { seedCharacters } from './seeders/seedCharacters'
 
 const prisma = new PrismaClient()
 
@@ -12,6 +13,7 @@ async function main() {
   await seedPermissions(prisma)
   await seedRoles(prisma)
   await seedUsers(prisma)
+  await seedCharacters(prisma)
 
   console.log('All seeds completed successfully!')
 }

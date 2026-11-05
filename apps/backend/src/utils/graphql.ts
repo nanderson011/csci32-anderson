@@ -2,6 +2,8 @@ import { UserResolver } from '@/resolvers/UserResolver'
 import { buildSchema, registerEnumType } from 'type-graphql'
 import { customAuthChecker } from '@/utils/authChecker'
 import { RoleResolver } from '@/resolvers/RoleResolver'
+import { CharacterResolver } from '@/resolvers/CharacterResolver'
+import type { CharacterService } from '@/services/CharacterService'
 
 import type { NonEmptyArray } from 'type-graphql'
 import type { FastifyBaseLogger, FastifyInstance, FastifyReply, FastifyRequest } from 'fastify'
@@ -27,12 +29,13 @@ registerEnumType(RoleName, {
   description: 'Enum representing valid roles for users',
 })
 
-const resolvers = [UserResolver, RoleResolver] as NonEmptyArray<Function>
+const resolvers = [UserResolver, RoleResolver, CharacterResolver] as NonEmptyArray<Function>
 
 export interface Context {
   request: FastifyRequest
   reply: FastifyReply
   userService: UserService
+  characterService: CharacterService
   prisma: PrismaClient
   log: FastifyBaseLogger
 }
@@ -58,6 +61,7 @@ export async function registerGraphQL(fastify: FastifyInstance) {
       request,
       reply,
       userService: fastify.userService,
+      characterService: fastify.characterService,
       prisma: fastify.prisma,
       log: fastify.log,
     }),
